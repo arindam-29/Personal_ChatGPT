@@ -46,7 +46,7 @@ class CustomLogger:
         return structlog.get_logger(logger_name)
 
 
-# # --- Testing Example ---
-if __name__ == "__main__":
-    logger = CustomLogger().get_logger(__file__)
-    logger.error("Failed to process PDF", error="File not found", user_id=123)
+# # --- Testing Logger ---
+# if __name__ == "__main__":
+#     logger = CustomLogger().get_logger(__file__)
+#     logger.error("Failed to process PDF", error="File not found", user_id=123)
