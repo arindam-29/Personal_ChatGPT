@@ -1,0 +1,13 @@
+structlog
+pyyaml
+python-dotenv
+boto3
+
+langchain
+langchain-google-genai
+langchain-openai
+openai
+langchain-groq
+langchain-qdrant
+
+-e .

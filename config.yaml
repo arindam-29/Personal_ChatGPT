@@ -1,0 +1,28 @@
+providers:
+  llm: google
+  embedding: openai
+
+llm:
+  google:
+    model_name: "gemini-2.0-flash-lite"
+    temperature: 0.2
+    max_output_tokens: 2048
+  openai:
+    model_name: "gpt-4"
+    temperature: 0.2
+    max_output_tokens: 2048
+  groq:
+    model_name: "groq-llm-8k-v1"
+    temperature: 0.2
+    max_output_tokens: 2048
+
+embedding_model:
+  google:
+    model_name: "gemini-embedding-001"
+  openai:
+    model_name: "text-embedding-3-large"
+
+AWS-S3:
+  bucket_name: "personal-chatgpt-s3-bucket"
+  preindex_folder_name: "pre-index"
+  postindex_folder_name: "post-index"
