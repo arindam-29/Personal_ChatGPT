@@ -3,6 +3,8 @@ import logging
 from datetime import datetime
 import structlog
 
+CONSOLE_LOGS = False  # Set to False to disable console logs
+
 class CustomLogger:
     def __init__(self, log_dir="logs"):
         # Ensure logs directory exists
@@ -21,14 +23,18 @@ class CustomLogger:
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(logging.Formatter("%(message)s"))  # Raw JSON lines
 
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(logging.Formatter("%(message)s"))
+        if CONSOLE_LOGS:
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(logging.INFO)
+            console_handler.setFormatter(logging.Formatter("%(message)s"))
+            handlers = [file_handler, console_handler]
+        else:
+            handlers = [file_handler]
 
         logging.basicConfig(
             level=logging.INFO,
             format="%(message)s",  # Structlog will handle JSON rendering
-            handlers=[console_handler, file_handler]
+            handlers=handlers
         )
 
         # Configure structlog for JSON structured logging
