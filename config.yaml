@@ -1,5 +1,9 @@
+user_names:
+  user1: "Arindam"
+  user2: "Testing"
+
 providers:
-  llm: google
+  llm: openai
   embedding: openai
 
 llm:

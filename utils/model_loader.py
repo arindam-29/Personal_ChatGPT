@@ -1,53 +1,13 @@
 import os
-import sys
-import json
 from dotenv import load_dotenv
 from exception.custom_exception import ProjectCustomException
 from logger import GLOBAL_LOGGER as logger
 from utils.config_loader import load_config
+from utils.APIKey_loader import APIKeyManager
 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_groq import ChatGroq
-
-class APIKeyManager:
-    REQUIRED_KEYS = ['GOOGLE_API_KEY', 'OPENAI_API_KEY', 'GROQ_API_KEY']
-
-    def __init__(self):
-        self.api_keys = {}
-        raw = os.getenv("API_KEYS")
-
-        if raw:
-            try:
-                parsed = json.loads(raw)
-                if not isinstance(parsed, dict):
-                    raise ValueError("API_KEYS is not a valid JSON object")
-                self.api_keys = parsed
-                logger.info("Loaded API_KEYS from ECS secret")
-            except Exception as e:
-                logger.warning("Failed to parse API_KEYS as JSON", error=str(e))
-
-        # Fallback to individual env vars
-        for key in self.REQUIRED_KEYS:
-            if not self.api_keys.get(key):
-                env_val = os.getenv(key)
-                if env_val:
-                    self.api_keys[key] = env_val
-                    logger.info(f"Loaded {key} from individual env var")
-
-        # Final check
-        missing = [k for k in self.REQUIRED_KEYS if not self.api_keys.get(k)]
-        if missing:
-            logger.error("Missing required API keys", missing_keys=missing)
-            raise ProjectCustomException("Missing API keys", sys)
-
-        logger.info("API keys loaded", keys={k: v[:6] + "..." for k, v in self.api_keys.items()})
-    
-    def get(self, key: str) -> str:
-        val = self.api_keys.get(key)
-        if not val:
-            raise KeyError(f"API key for {key} is missing")
-        return val
 
 class ModelLoader:
     """
@@ -55,13 +15,12 @@ class ModelLoader:
     """
 
     def __init__(self):
-        if os.getenv("ENV", "local").lower() != "production":
-            load_dotenv()
-            logger.info("Running in LOCAL mode, loading environment variables from .env file")
-        else:
-            logger.info("Running in PRODUCTION mode")
+        REQUIRED_KEYS = ['GOOGLE_API_KEY', 'OPENAI_API_KEY', 'GROQ_API_KEY']
+        api_key_mgr = APIKeyManager(REQUIRED_KEYS)
+        self.openai_api_key = api_key_mgr.get("OPENAI_API_KEY")
+        self.google_api_key = api_key_mgr.get("GOOGLE_API_KEY")
+        self.groq_api_key = api_key_mgr.get("GROQ_API_KEY")
 
-        self.api_key_mgr = APIKeyManager()
         self.config = load_config()
         logger.info("config file loaded", config_keys=list(self.config.keys()))
     
@@ -84,12 +43,12 @@ class ModelLoader:
         if provider == "google":
             return GoogleGenerativeAIEmbeddings(
                 model=model_name,
-                google_api_key=self.api_key_mgr.get("GOOGLE_API_KEY")
+                google_api_key=self.google_api_key
             )
         elif provider == "openai":
             return OpenAIEmbeddings(
                 model=model_name,
-                openai_api_key=self.api_key_mgr.get("OPENAI_API_KEY")
+                openai_api_key=self.openai_api_key
             )
         else:
             logger.error("Unsupported embedding provider", provider=provider)
@@ -115,7 +74,7 @@ class ModelLoader:
         if provider == "google":
             return ChatGoogleGenerativeAI(
                 model=model_name,
-                google_api_key=self.api_key_mgr.get("GOOGLE_API_KEY"),
+                google_api_key=self.google_api_key,
                 temperature=temperature,
                 max_output_tokens=max_tokens
             )
@@ -123,14 +82,14 @@ class ModelLoader:
         elif provider == "groq":
             return ChatGroq(
                 model=model_name,
-                api_key=self.api_key_mgr.get("GROQ_API_KEY"),
+                api_key=self.groq_api_key,
                 temperature=temperature,
             )
 
         elif provider == "openai":
             return ChatOpenAI(
                 model=model_name,
-                api_key=self.api_key_mgr.get("OPENAI_API_KEY"),
+                api_key=self.openai_api_key,
                 temperature=temperature,
                 max_tokens=max_tokens
             )
@@ -145,19 +104,19 @@ if __name__ == "__main__":
 
     # Test Embedding
     embeddings = loader.load_embeddings()
-    # print(f"Embedding Model Loaded: {embeddings}")
-    # result = embeddings.embed_query("Hello, how are you?")
+    print(f"Embedding Model Loaded: {embeddings}")
+    result = embeddings.embed_query("Hello, how are you?")
     # print(f"Embedding Result: {result}")
 
-    # Test LLM
-    # llm = loader.load_llm()
-    # print(f"LLM Loaded: {llm}")
-    # result = llm.invoke("Hello, how are you?")
-    # print(f"LLM Result: {result.content}")
+    ### Test LLM
+    llm = loader.load_llm()
+    print(f"LLM Loaded: {llm}")
+    result = llm.invoke("Hello, how are you?")
+    print(f"LLM Result: {result.content}")
 
-    from langchain_qdrant import QdrantVectorStore
-    from qdrant_client import QdrantClient
-    from qdrant_client.http.models import Distance, VectorParams
+    # from langchain_qdrant import QdrantVectorStore
+    # from qdrant_client import QdrantClient
+    # from qdrant_client.http.models import Distance, VectorParams
 
     ### LOCAL QDRANT TESTING
 

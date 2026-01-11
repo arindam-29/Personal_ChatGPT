@@ -4,10 +4,15 @@ python-dotenv
 boto3
 
 langchain
+langchain-text-splitters
 langchain-google-genai
 langchain-openai
 openai
 langchain-groq
 langchain-qdrant
+
+PyMuPDF
+docx2txt
+python-pptx
 
 -e .
