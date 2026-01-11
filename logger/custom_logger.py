@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 import structlog
 
-CONSOLE_LOGS = True  # Set to False to disable console logs
+CONSOLE_LOGS = False  # Set to False to disable console logs
 
 class CustomLogger:
     def __init__(self, log_dir="logs"):

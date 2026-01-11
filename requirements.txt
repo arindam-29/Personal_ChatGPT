@@ -2,8 +2,10 @@ structlog
 pyyaml
 python-dotenv
 boto3
+pydantic
 
 langchain
+langchain-core
 langchain-text-splitters
 langchain-google-genai
 langchain-openai

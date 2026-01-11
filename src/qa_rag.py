@@ -24,17 +24,19 @@ class ConversationalRAG:
         answer = rag.invoke("What is ...?", chat_history=[])
     """
 
-    def __init__(self, user_name:str):
+    def __init__(self, user_name: str):
         try:
             self.user_name = user_name
+            self.session_id = "Arindam_session"  # Placeholder for session management
 
             # Load LLM and prompts once
             modelload = ModelLoader()
             self.embeddings = modelload.load_embeddings()
-            self.llm = modelload().load_llm()
+            self.llm = modelload.load_llm()
 
-            retriever = QdrantVDB()
-            self.retriever = retriever.get_vector_store(self.embeddings, collection_name=user_name)
+            qdrant_ds = QdrantVDB()
+            vector_store = qdrant_ds.get_vector_store(self.embeddings, collection_name=user_name)
+            self.retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 1})
 
             self.contextualize_prompt: ChatPromptTemplate = PROMPT_REGISTRY[PromptType.CONTEXTUALIZE_QUESTION.value]
             self.qa_prompt: ChatPromptTemplate = PROMPT_REGISTRY[PromptType.CONTEXT_QA.value]
@@ -73,19 +75,6 @@ class ConversationalRAG:
         except Exception as e:
             loger.error("Failed to invoke ConversationalRAG", error=str(e))
             raise ProjectCustomException("Invocation error in ConversationalRAG", sys)
-
-    # ---------- Internals ----------
-
-    def _load_llm(self):
-        try:
-            llm = ModelLoader().load_llm()
-            if not llm:
-                raise ValueError("LLM could not be loaded")
-            loger.info("LLM loaded successfully", session_id=self.session_id)
-            return llm
-        except Exception as e:
-            loger.error("Failed to load LLM", error=str(e))
-            raise ProjectCustomException("LLM loading error in ConversationalRAG", sys)
 
     @staticmethod
     def _format_docs(docs) -> str:
@@ -127,6 +116,7 @@ class ConversationalRAG:
 if __name__ == "__main__":
     rag = ConversationalRAG(user_name="Arindam")
     test_chat_history = []
-    test_question = "What is Agentic AI?"
+    # test_question = "How many years of experience Arindam has?"
+    test_question = "Give me Rudy's vaccine report?"
     answer = rag.invoke(user_input=test_question, chat_history=test_chat_history)
     print("Answer:", answer)
